@@ -37,17 +37,19 @@ nx_b = round((L(1)-len_tf)/dx);
 ny_a = round(len_tf/dy);
 ny_b = round((L(2)-len_tf)/dy);
 
-Ez_1D = zeros(nx_b+1,1);
-Fz_1D = zeros(nx_b+1,1);
-Hy_1D = zeros(nx_b,1);
+% Ez_1D = zeros(nx_b+1,1);
+% Fz_1D = zeros(nx_b+1,1);
+% Hy_1D = zeros(nx_b,1);
 k_Fz_a = zeros(nx_b+1,1);
 k_Fz_b = zeros(nx_b+1,1);
 k_Hy_a = zeros(nx_b,1);
 k_Hy_b = zeros(nx_b,1);
-k_Ez_a = (2.0*eps0*Material(1,1)-Material(1,3)*dt)/(2.0*eps0*Material(1,1)+Material(1,3)*dt);
-k_Ez_b = 2.0/(2.0*eps0*Material(1,1)+Material(1,3)*dt);
+% k_Ez_a = (2.0*eps0*Material(1,1)-Material(1,3)*dt)/(2.0*eps0*Material(1,1)+Material(1,3)*dt);
+% k_Ez_b = 2.0/(2.0*eps0*Material(1,1)+Material(1,3)*dt);
 Hz_1D = zeros(nx_b+1,1);
+Hz_1Ds = zeros(nx_b+1,1);
 Ey_1D = zeros(nx_b,1);
+Ey_1Ds = zeros(nx_b,1);
 k_Hz_a = zeros(nx_b+1,1);
 k_Hz_b = zeros(nx_b+1,1);
 k_Ey_a = zeros(nx_b,1);
@@ -67,19 +69,25 @@ m = 4;
 R_err = 1e-16;
 eta = sqrt(mu0*Material(1,2)/eps0/Material(1,1));
 
-Fz = zeros(nx,ny);
-Tz = zeros(nx,ny);
-Gx = zeros(nx,ny-1);
-Gy = zeros(nx-1,ny);
+% Fz = zeros(nx,ny);
+% Tz = zeros(nx,ny);
+% Gx = zeros(nx,ny-1);
+% Gy = zeros(nx-1,ny);
 Ez = zeros(nx,ny);
-Hx = zeros(nx,ny-1);
-Hy = zeros(nx-1,ny);
+% Hx = zeros(nx,ny-1);
+% Hy = zeros(nx-1,ny);
 Wz = zeros(nx,ny);
+Wzs = zeros(nx,ny);
 Mx = zeros(nx,ny-1);
+Mxs = zeros(nx,ny-1);
 My = zeros(nx-1,ny);
+Mys = zeros(nx-1,ny);
 Hz = zeros(nx,ny);
+Hzs = zeros(nx,ny);
 Ex = zeros(nx,ny-1);
+Exs = zeros(nx,ny-1);
 Ey = zeros(nx-1,ny);
+Eys = zeros(nx-1,ny);
 
 k_Fz_1 = zeros(ny,1);
 k_Fz_2 = zeros(ny,1);
@@ -137,70 +145,87 @@ k_Ez_2 = repmat(k_Ez_2(2:nx-1),1,ny-2);
 figure('units','normalized','outerposition',[0 0 1 1]);
 set(gcf,'doublebuffer','on');
 
+tmp = zeros(1,300);
+tmp(:) = 1;
 
-for T=1:200
+for T=1:720
 %    TE Mode ******************************************************************************************* 
 %     Hz의 초기 생성 위치
 
-%     Ey_1D(1:nx_b) = k_Ey_a(1:nx_b).*Ey_1D(1:nx_b) - k_Ey_b(1:nx_b).*(Hz_1D(2:nx_b+1)-Hz_1D(1:nx_b));
-    Ey_1D(1:399) = k_Ey_a(1:399).*Ey_1D(1:399) - k_Ey_b(1:399).*(Hz_1D(2:400)-Hz_1D(1:399));
+    Ey_1Ds(1:nx_b) = k_Ey_a(1:nx_b).*Ey_1Ds(1:nx_b) - k_Ey_b(1:nx_b).*(Hz_1Ds(2:nx_b+1)-Hz_1Ds(1:nx_b));
+%     Ey_1D(1:399) = k_Ey_a(1:399).*Ey_1D(1:399) - k_Ey_b(1:399).*(Hz_1D(2:400)-Hz_1D(1:399));
+    Ey_1D(1:399) = Ey_1D(1:399) - (dt/(eps0*dx))*(Hz_1D(2:400)-Hz_1D(1:399));
+    Hz_1Ds(1) = sin(2*pi*freq*(T-1)*dt);
     Hz_1D(1) = sin(2*pi*freq*(T-1)*dt);
-%     Hz_1D(2:nx_b) = Hz_1D(2:nx_b) - k_Hz_b(2:nx_b).*(Ey_1D(2:nx_b)-Ey_1D(1:nx_b-1));
-    Hz_1D(2:399) = Hz_1D(2:399) - k_Hz_b(2:399).*(Ey_1D(2:399)-Ey_1D(1:398));
+    Hz_1Ds(2:nx_b) = Hz_1Ds(2:nx_b) - k_Hz_b(2:nx_b).*(Ey_1Ds(2:nx_b)-Ey_1Ds(1:nx_b-1));
+%     Hz_1D(2:399) = Hz_1D(2:399) - k_Hz_b(2:399).*(Ey_1D(2:399)-Ey_1D(1:398));
+    Hz_1D(2:399) = Hz_1D(2:399) - (dt/(mu0*dx))*(Ey_1D(2:399)-Ey_1D(1:398));
 
     
 %     Hz 처리
 
-%     Fz_r1 = Wz(2:nx-1,2:ny-1);
+    Fz_r1s = Wzs(2:nx-1,2:ny-1);
     Fz_r1 = Wz(2:499,2:499);
-%     Wz(2:nx-1,2:ny-1) = Wz(2:nx-1,2:ny-1) + k_Fz_2.*((Ex(2:nx-1,2:ny-1)-Ex(2:nx-1,1:ny-2))/dy - (Ey(2:nx-1,2:ny-1)-Ey(1:nx-2,2:ny-1))/dx);
-    Wz(2:499,2:499) = Wz(2:499,2:499) + k_Fz_2.*((Ex(2:499,2:499)-Ex(2:499,1:498))/dy - (Ey(2:499,2:499)-Ey(1:498,2:499))/dx);
-%     Hz(2:nx-1,2:ny-1) = Hz(2:nx-1,2:ny-1) + k_Hz_2.*(Wz(2:nx-1,2:ny-1)-Fz_r1);
-    Hz(2:499,2:499) = Hz(2:499,2:499) + k_Hz_2.*(Wz(2:499,2:499)-Fz_r1);
+    Wzs(2:nx-1,2:ny-1) = Wzs(2:nx-1,2:ny-1) + k_Fz_2.*((Exs(2:nx-1,2:ny-1)-Exs(2:nx-1,1:ny-2))/dy - (Eys(2:nx-1,2:ny-1)-Eys(1:nx-2,2:ny-1))/dx);
+%     Wz(2:499,2:499) = Wz(2:499,2:499) + k_Fz_2.*((Ex(2:499,2:499)-Ex(2:499,1:498))/dy - (Ey(2:499,2:499)-Ey(1:498,2:499))/dx);
+    Wz(2:499,2:499) = Wz(2:499,2:499) + dt*((Ex(2:499,2:499)-Ex(2:499,1:498))/dy - (Ey(2:499,2:499)-Ey(1:498,2:499))/dx);
+    Hzs(2:nx-1,2:ny-1) = Hzs(2:nx-1,2:ny-1) + k_Hz_2.*(Wzs(2:nx-1,2:ny-1)-Fz_r1s);
+%     Hz(2:499,2:499) = Hz(2:499,2:499) + k_Hz_2.*(Wz(2:499,2:499)-Fz_r1);
+    Hz(2:499,2:499) = Hz(2:499,2:499) + (1/mu0)*(Wz(2:499,2:499)-Fz_r1);
     
     
 %     Hz 위줄, 아랫줄에서 반사되는 wave 제거
 
-%     Hz(nx_a+1,ny_a+1:ny_b+1) = Hz(nx_a+1,ny_a+1:ny_b+1) + dt./(mu0*Material(Index(nx_a+1,ny_a+1:ny_b+1)+1,2)'*dx)*Ey_1D(1);
-    Hz(101,101:400) = Hz(101,101:400) + dt./(mu0*Material(Index(101,101:400)+1,2)'*dx)*Ey_1D(1);
-%     Hz(nx_b+1,ny_a+1:ny_b+1) = Hz(nx_b+1,ny_a+1:ny_b+1) - dt./(mu0*Material(Index(nx_b+1,ny_a+1:ny_b+1)+1,2)'*dx)*Ey_1D(nx_b-nx_a+2);
-    Hz(400,101:400) = Hz(400,101:400) - dt./(mu0*Material(Index(400,101:400)+1,2)'*dx)*Ey_1D(301);
+    Hzs(nx_a+1,ny_a+1:ny_b+1) = Hzs(nx_a+1,ny_a+1:ny_b+1) + dt./(mu0*Material(Index(nx_a+1,ny_a+1:ny_b+1)+1,2)'*dx)*Ey_1Ds(1);
+%     Hz(101,101:400) = Hz(101,101:400) + dt./(mu0*Material(Index(101,101:400)+1,2)'*dx)*Ey_1D(1);
+    Hz(101,101:400) = Hz(101,101:400) + dt/(mu0*dx)*Ey_1D(1);
+    Hzs(nx_b+1,ny_a+1:ny_b+1) = Hzs(nx_b+1,ny_a+1:ny_b+1) - dt./(mu0*Material(Index(nx_b+1,ny_a+1:ny_b+1)+1,2)'*dx)*Ey_1Ds(nx_b-nx_a+2);
+%     Hz(400,101:400) = Hz(400,101:400) - dt./(mu0*Material(Index(400,101:400)+1,2)'*dx)*Ey_1D(301);
+    Hz(400,101:400) = Hz(400,101:400) - dt/(mu0*dx)*Ey_1D(301);
 
     
 %     Ex 처리
 
-%     Gx_r1 = Mx(1:nx,1:ny-1);
+    Gx_r1s = Mxs(1:nx,1:ny-1);
     Gx_r1 = Mx(1:500,1:499);
-%     Mx(1:nx,1:ny-1) = k_Gx_1.*Mx(1:nx,1:ny-1) + k_Gx_2.*(Hz(1:nx,2:ny)-Hz(1:nx,1:ny-1));
-    Mx(1:500,1:499) = k_Gx_1.*Mx(1:500,1:499) + k_Gx_2.*(Hz(1:500,2:500)-Hz(1:500,1:499));
-%     Ex(1:nx,1:ny-1) = K_a1(IndexX(1:nx,1:ny-1)+1).*(K_b1(IndexX(1:nx,1:ny-1)+1).*Ex(1:nx,1:ny-1)+k_Ex_1.*Mx(1:nx,1:ny-1)-k_Ex_2.*Gx_r1);
-    Ex(1:500,1:499) = K_a1(Index(1:500,1:499)+1).*(K_b1(IndexX(1:500,1:499)+1).*Ex(1:500,1:499)+k_Ex_1.*Mx(1:500,1:499)-k_Ex_2.*Gx_r1);
+    Mxs(1:nx,1:ny-1) = k_Gx_1.*Mxs(1:nx,1:ny-1) + k_Gx_2.*(Hzs(1:nx,2:ny)-Hzs(1:nx,1:ny-1));
+%     Mx(1:500,1:499) = k_Gx_1.*Mx(1:500,1:499) + k_Gx_2.*(Hz(1:500,2:500)-Hz(1:500,1:499));
+    Mx(1:500,1:499) = Mx(1:500,1:499) + (dt/dy)*(Hz(1:500,2:500)-Hz(1:500,1:499));
+    Exs(1:nx,1:ny-1) = K_a1(IndexX(1:nx,1:ny-1)+1).*(K_b1(IndexX(1:nx,1:ny-1)+1).*Exs(1:nx,1:ny-1)+k_Ex_1.*Mxs(1:nx,1:ny-1)-k_Ex_2.*Gx_r1s);
+%     Ex(1:500,1:499) = K_a1(Index(1:500,1:499)+1).*(K_b1(IndexX(1:500,1:499)+1).*Ex(1:500,1:499) + k_Ex_1.*Mx(1:500,1:499) - k_Ex_2.*Gx_r1);
+    Ex(1:500,1:499) = 1/(2*eps0)*((2*eps0)*Ex(1:500,1:499) + 2*Mx(1:500,1:499) - 2*Gx_r1);
     
     
 %     Ey 처리
 
-%     Gy_r1 = My(1:nx-1,1:ny);
+    Gy_r1s = Mys(1:nx-1,1:ny);
     Gy_r1 = My(1:499,1:500);
-%     My(1:nx-1,1:ny) = k_Gy_1.*My(1:nx-1,1:ny) - k_Gy_2.*(Hz(2:nx,1:ny)-Hz(1:nx-1,1:ny));
-    My(1:499,1:500) = k_Gy_1.*My(1:499,1:500) - k_Gy_2.*(Hz(2:500,1:500)-Hz(1:499,1:500));
-%     Ey(1:nx-1,1:ny) = K_a1(IndexY(1:nx-1,1:ny)+1).*(K_b1(IndexY(1:nx-1,1:ny)+1).*Ey(1:nx-1,1:ny)+k_Ey_1.*My(1:nx-1,1:ny)-k_Ey_2.*Gy_r1);
-    Ey(1:499,1:500) = K_a1(IndexY(1:499,1:500)+1).*(K_b1(IndexY(1:499,1:500)+1).*Ey(1:499,1:500)+k_Ey_1.*My(1:499,1:500)-k_Ey_2.*Gy_r1);
+    Mys(1:nx-1,1:ny) = k_Gy_1.*Mys(1:nx-1,1:ny) - k_Gy_2.*(Hzs(2:nx,1:ny)-Hzs(1:nx-1,1:ny));
+%     My(1:499,1:500) = k_Gy_1.*My(1:499,1:500) - k_Gy_2.*(Hz(2:500,1:500)-Hz(1:499,1:500));
+    My(1:499,1:500) = My(1:499,1:500) - (dt/dx)*(Hz(2:500,1:500)-Hz(1:499,1:500));
+    Eys(1:nx-1,1:ny) = K_a1(IndexY(1:nx-1,1:ny)+1).*(K_b1(IndexY(1:nx-1,1:ny)+1).*Eys(1:nx-1,1:ny)+k_Ey_1.*Mys(1:nx-1,1:ny)-k_Ey_2.*Gy_r1s);
+%     Ey(1:499,1:500) = K_a1(IndexY(1:499,1:500)+1).*(K_b1(IndexY(1:499,1:500)+1).*Ey(1:499,1:500)+k_Ey_1.*My(1:499,1:500)-k_Ey_2.*Gy_r1);
+    Ey(1:499,1:500) = 1/(2*eps0)*((2*eps0)*Ey(1:499,1:500) + 2*My(1:499,1:500) - 2*Gy_r1);
     
     
 %     좌,우측에서 반사되는 wave 처리 
 
-%     Ex(nx_a+1:nx_b+1,ny_a) = Ex(nx_a+1:nx_b+1,ny_a) - 2*dt/dy*K_a1(Index(nx_a+1:nx_b+1,ny_a)+1)'.*Hz_1D(2:(nx_b-nx_a+2));
-    Ex(101:400,100) = Ex(101:400,100) - 2*dt/dy*K_a1(Index(101:400,100)+1)'.*Hz_1D(2:301);
-%     Ex(nx_a+1:nx_b+1,ny_b+1) = Ex(nx_a+1:nx_b+1,ny_b+1) + 2*dt/dy*K_a1(Index(nx_a+1:nx_b+1,ny_b+1)+1)'.*Hz_1D(2:(nx_b-nx_a+2));
-    Ex(101:400,400) = Ex(101:400,400) + 2*dt/dy*K_a1(Index(101:400,400)+1)'.*Hz_1D(2:301);
+    Exs(nx_a+1:nx_b+1,ny_a) = Exs(nx_a+1:nx_b+1,ny_a) - 2*dt/dy*K_a1(Index(nx_a+1:nx_b+1,ny_a)+1)'.*Hz_1Ds(2:(nx_b-nx_a+2));
+%     Ex(101:400,100) = Ex(101:400,100) - 2*dt/dy*K_a1(Index(101:400,100)+1)'.*Hz_1D(2:301);
+    Ex(101:400,100) = Ex(101:400,100) - 2*(dt/dy)*(1/(2*eps0))*Hz_1D(2:301);
+    Exs(nx_a+1:nx_b+1,ny_b+1) = Exs(nx_a+1:nx_b+1,ny_b+1) + 2*dt/dy*K_a1(Index(nx_a+1:nx_b+1,ny_b+1)+1)'.*Hz_1Ds(2:(nx_b-nx_a+2));
+%     Ex(101:400,400) = Ex(101:400,400) + 2*dt/dy*K_a1(Index(101:400,400)+1)'.*Hz_1D(2:301);
+    Ex(101:400,400) = Ex(101:400,400) + 2*(dt/dy)*(1/(2*eps0))*Hz_1D(2:301);
     
     
 %     위,아래에서 반사되는 wave처리
 
-%     Ey(nx_a,ny_a+1:ny_b+1) = Ey(nx_a,ny_a+1:ny_b+1) + 2*dt/dx*K_a1(Index(nx_a,ny_a+1:ny_b+1)+1,1)'.*Hz_1D(2);
-    Ey(100,101:400) = Ey(100,101:400) + 2*dt/dx*K_a1(Index(100,101:400)+1,1)'.*Hz_1D(2);
-%     Ey(nx_b+1,ny_a+1:ny_b+1) = Ey(nx_b+1,ny_a+1:ny_b+1) - 2*dt/dx*K_a1(Index(nx_b+1,ny_a+1:ny_b+1)+1,1)'.*Hz_1D(nx_b-nx_a+2);
-    Ey(400,101:400) = Ey(400,101:400) - 2*dt/dx*K_a1(Index(400,101:400)+1,1)'.*Hz_1D(301);
+    Eys(nx_a,ny_a+1:ny_b+1) = Eys(nx_a,ny_a+1:ny_b+1) + 2*dt/dx*K_a1(Index(nx_a,ny_a+1:ny_b+1)+1,1)'.*Hz_1Ds(2);
+%     Ey(100,101:400) = Ey(100,101:400) + 2*dt/dx*K_a1(Index(100,101:400)+1,1)'.*Hz_1D(2);
+    Ey(100,101:400) = Ey(100,101:400) + 2*(dt/dx)*(1/(2*eps0))*Hz_1D(2);
+    Eys(nx_b+1,ny_a+1:ny_b+1) = Eys(nx_b+1,ny_a+1:ny_b+1) - 2*dt/dx*K_a1(Index(nx_b+1,ny_a+1:ny_b+1)+1,1)'.*Hz_1Ds(nx_b-nx_a+2);
+%     Ey(400,101:400) = Ey(400,101:400) - 2*dt/dx*K_a1(Index(400,101:400)+1,1)'.*Hz_1D(301);
+    Ey(400,101:400) = Ey(400,101:400) - 2*(dt/dx)*(1/(2*eps0))*Hz_1D(301);
     
     
     
@@ -211,7 +236,7 @@ for T=1:200
     if(mod(T,10) == 0)
         
         subplot(1,2,1);
-        pcolor(Y(1:ny),X(1:nx),Ez(1:nx,1:ny));
+        pcolor(Y(1:ny),X(1:nx),Hzs(1:nx,1:ny));
         shading interp;
         axis image;
         colorbar;
