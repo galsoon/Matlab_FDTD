@@ -37,15 +37,15 @@ nx_b = round((L(1)-len_tf)/dx);
 ny_a = round(len_tf/dy);
 ny_b = round((L(2)-len_tf)/dy);
 
-% Ez_1D = zeros(nx_b+1,1);
-% Fz_1D = zeros(nx_b+1,1);
-% Hy_1D = zeros(nx_b,1);
+Ez_1D = zeros(nx_b+1,1);
+Fz_1D = zeros(nx_b+1,1);
+Hy_1D = zeros(nx_b,1);
 k_Fz_a = zeros(nx_b+1,1);
 k_Fz_b = zeros(nx_b+1,1);
 k_Hy_a = zeros(nx_b,1);
 k_Hy_b = zeros(nx_b,1);
-% k_Ez_a = (2.0*eps0*Material(1,1)-Material(1,3)*dt)/(2.0*eps0*Material(1,1)+Material(1,3)*dt);
-% k_Ez_b = 2.0/(2.0*eps0*Material(1,1)+Material(1,3)*dt);
+k_Ez_a = (2.0*eps0*Material(1,1)-Material(1,3)*dt)/(2.0*eps0*Material(1,1)+Material(1,3)*dt);
+k_Ez_b = 2.0/(2.0*eps0*Material(1,1)+Material(1,3)*dt);
 Hz_1D = zeros(nx_b+1,1);
 Hz_1Ds = zeros(nx_b+1,1);
 Ey_1D = zeros(nx_b,1);
@@ -69,13 +69,13 @@ m = 4;
 R_err = 1e-16;
 eta = sqrt(mu0*Material(1,2)/eps0/Material(1,1));
 
-% Fz = zeros(nx,ny);
-% Tz = zeros(nx,ny);
-% Gx = zeros(nx,ny-1);
-% Gy = zeros(nx-1,ny);
+Fz = zeros(nx,ny);
+Tz = zeros(nx,ny);
+Gx = zeros(nx,ny-1);
+Gy = zeros(nx-1,ny);
 Ez = zeros(nx,ny);
-% Hx = zeros(nx,ny-1);
-% Hy = zeros(nx-1,ny);
+Hx = zeros(nx,ny-1);
+Hy = zeros(nx-1,ny);
 Wz = zeros(nx,ny);
 Wzs = zeros(nx,ny);
 Mx = zeros(nx,ny-1);
@@ -148,7 +148,7 @@ set(gcf,'doublebuffer','on');
 tmp = zeros(1,300);
 tmp(:) = 1;
 
-for T=1:720
+for T=1:200
 %    TE Mode ******************************************************************************************* 
 %     Hz의 초기 생성 위치
 
